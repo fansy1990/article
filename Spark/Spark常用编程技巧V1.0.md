@@ -32,6 +32,7 @@ scala> avg(data1)
 res52: Double = 2.0
 ```
 使用 ***foldLeft*** 实现
+
 2.   
 
 ### 1.2 Spark 篇
@@ -83,6 +84,7 @@ scala> data.select(substring(col("name") ,1 , 3)).show
 
 ```
 ***substring***(列名，开始值，截取长度)， 其中开始值其实是从 1 开始的，所以写 0 和 1 的结果是一样的；
+
 2. DataFarme collect后，获取其中的值
 ```
 scala> case class P(name:String,age:Int,salary:Double)
@@ -103,6 +105,7 @@ scala> data.collect.map(row => (row.getString(0),row.getInt(1),row.getDouble(2))
 
 ```
 DataFrame 通过Action后，得到的是 Array[Row] 类型，Row 类型获取值需要通过 getXXX() 的形式来获得，而 XXX 对应的就是其类型，如 Double 类型，那么就是 getDouble() ;
+
 3. 自定义udf，处理基本类型列
 
 这里的基本类型是指：Double，String，Int，Float。。。
@@ -124,6 +127,7 @@ scala> data.select(handle_cols(col("name"),col("age"),col("salary"))).show()
 +-------------------------+
 
 ```
+
 4. 自定义udf，处理基本类型列时，传入固定值（数据参考3）
 ```
 scala> val handle_cols = udf {(name:String,age:Int,salary:Double,splitter:String) => name+splitter+age+splitter + salary} 
@@ -138,6 +142,7 @@ scala> data.select(handle_cols(col("name"),col("age"),col("salary"),lit("_"))).s
 +-------------------------+
 ```
 出入固定值，使用 ***lit*** 函数
+
 5. 自定义udf后，新列名重命名(数据参考4)
 ```
 
@@ -151,6 +156,7 @@ scala> data.select(handle_cols(col("name"),col("age"),col("salary"),lit("_")) as
 
 ```
 重命名使用 ***as*** 函数
+
 6. 按照某个列进行分组，获取分组后的数据（Array类型）
 ```
 scala> case class YV(y:String, v:Double)
@@ -179,6 +185,7 @@ scala> data.groupBy("y").agg(collect_list(col("v"))).show
 |2018|[1.0, 5.0, 4.0]|
 +----+---------------+
 ```
+
 7. 针对DataFrame的某个数组类型Flatten为基本类型（数据使用6.）
 ```
 scala> data.groupBy("y").agg(collect_list(col("v")) as "v_list").withColumn("v_list",explode(col("v_list")))
@@ -195,6 +202,7 @@ scala> data.groupBy("y").agg(collect_list(col("v")) as "v_list").withColumn("v_l
 |2018|   4.0|
 +----+------+
 ```
+
 8. 
 
 
@@ -232,6 +240,7 @@ scala> data.groupBy("y").agg(collect_list(col("v")) as "v_list").withColumn("v_l
 
 ```
 这里的 ***v_list*** 列就是数组类型，如果自定义函数处理这个列，那么就需要把 udf 的类型定义为： ***scala.collection.mutable.WrappedArray[Double]***
+
 2. 合并基本数据类型为struct类型
 ```
 scala> case class YVV(y:String, v1:Double,v2:Double)
@@ -280,6 +289,7 @@ scala> data.select(col("y"),struct("v1","v2") as "v1_v2").select(col("y"),col("v
 
 ```
 合并两个基本数据类型使用 ***struct***函数，取得 ***struct*** 类型的数据使用 ***新合并列名.原列名*** 的方式获得；
+
 3. 自定义udf，处理struct类型数据(数据使用2.)
 ```
 scala> val handle_struct = udf{(x:org.apache.spark.sql.Row) => Array(x.getDouble(0),x.getDouble(1)).max}
@@ -300,6 +310,7 @@ scala> data.select(col("y"),struct("v1","v2") as "v1_v2").withColumn("v1_v2",han
 +----+-----+
 ```
 这里使用自定义函数，求 struct 类型中的数据的 v1 , v2 中的最大值
+
 4. 自定义udf，处理Array[Struct] 类型数据（数据使用2.）
 ```
 scala> data.select(col("y"),struct("v1","v2") as "v1_v2").groupBy("y").agg(collect_list(col("v1_v2")) as "v_list")
@@ -330,4 +341,5 @@ scala> data.select(col("y"),struct("v1","v2") as "v1_v2").groupBy("y").agg(colle
 ```
 这里要注意，使用udf的参数类型需要是 Seq[Row] 类型，同时在函数里面，获取每个Row对应的值，使用 ***getXXX()*** 实现；
 > 想一想上面的函数处理得到的结果是什么？
+
 5. 
