@@ -1,0 +1,23 @@
+
+#!/bin/bash
+
+JENKINS_HOME=/usr/local/jenkins
+
+if [ $1 = 'start' ]; then 
+	echo "Starting jenkins ..."
+	source /etc/profile 
+	cd $JENKINS_HOME
+	java -jar jenkins.war --httpPort=8080 &
+	echo $! > /var/run/jenkins.pid
+elif [ $1 = 'stop' ]; then 
+	echo "Stoping jenkins ..."
+	kill -9 `cat /var/run/jenkins.pid`
+	rm -rf /var/run/jenkins.pid
+	
+else
+	if [ -e /var/run/jenkins.pid ]; then
+		echo "Jenkins is running!"
+	else 
+		echo "Jenkins stoped!!"
+	fi
+fi
